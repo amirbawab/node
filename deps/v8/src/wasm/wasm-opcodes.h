@@ -230,17 +230,7 @@ bool IsJSCompatibleSignature(const FunctionSig* sig, bool hasBigIntFeature);
 
 // For compatibility with Asm.js.
 #define FOREACH_ASMJS_COMPAT_OPCODE(V) \
-  V(F64Acos, 0xc5, d_d)                \
-  V(F64Asin, 0xc6, d_d)                \
-  V(F64Atan, 0xc7, d_d)                \
-  V(F64Cos, 0xc8, d_d)                 \
-  V(F64Sin, 0xc9, d_d)                 \
-  V(F64Tan, 0xca, d_d)                 \
-  V(F64Exp, 0xcb, d_d)                 \
-  V(F64Log, 0xcc, d_d)                 \
-  V(F64Atan2, 0xcd, d_dd)              \
-  V(F64Pow, 0xce, d_dd)                \
-  V(F64Mod, 0xcf, d_dd)                \
+  FOREACH_MATH_OPCODE(V)               \
   V(I32AsmjsDivS, 0xd3, i_ii)          \
   V(I32AsmjsDivU, 0xd4, i_ii)          \
   V(I32AsmjsRemS, 0xd5, i_ii)          \
@@ -261,6 +251,20 @@ bool IsJSCompatibleSignature(const FunctionSig* sig, bool hasBigIntFeature);
   V(I32AsmjsUConvertF32, 0xe4, i_f)    \
   V(I32AsmjsSConvertF64, 0xe5, i_d)    \
   V(I32AsmjsUConvertF64, 0xe6, i_d)
+
+#define FOREACH_MATH_OPCODE(V)         \
+  V(F64Acos, 0xc5, d_d)                \
+  V(F64Asin, 0xc6, d_d)                \
+  V(F64Atan, 0xc7, d_d)                \
+  V(F64Cos, 0xc8, d_d)                 \
+  V(F64Sin, 0xc9, d_d)                 \
+  V(F64Tan, 0xca, d_d)                 \
+  V(F64Exp, 0xcb, d_d)                 \
+  V(F64Log, 0xcc, d_d)                 \
+  V(F64Atan2, 0xcd, d_dd)              \
+  V(F64Pow, 0xce, d_dd)                \
+  V(F64Mod, 0xcf, d_dd)                \
+
 
 #define FOREACH_SIMD_MEM_OPCODE(V) \
   V(S128LoadMem, 0xfd00, s_i)      \
