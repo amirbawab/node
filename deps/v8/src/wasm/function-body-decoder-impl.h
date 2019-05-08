@@ -682,6 +682,8 @@ struct ControlBase {
   F(Unreachable)                                                              \
   F(Select, const Value& cond, const Value& fval, const Value& tval,          \
     Value* result)                                                            \
+  F(Offset32, const Value& base, const Value& index, const Value& scale,      \
+  Value* result)                                                              \
   F(Br, Control* target)                                                      \
   F(BrIf, const Value& cond, uint32_t depth)                                  \
   F(BrTable, const BranchTableImmediate<validate>& imm, const Value& key)     \
@@ -1353,6 +1355,7 @@ class WasmDecoder : public Decoder {
 #define DECLARE_OPCODE_CASE(name, opcode, sig) case kExpr##name:
     // clang-format off
     switch (opcode) {
+      case kExprOffset32:
       case kExprSelect:
         return {3, 1};
       case kExprSetTable:
@@ -1859,6 +1862,14 @@ class WasmFullDecoder : public WasmDecoder<validate> {
           auto tval = Pop(0, fval.type);
           auto* result = Push(tval.type == kWasmVar ? fval.type : tval.type);
           CALL_INTERFACE_IF_REACHABLE(Select, cond, fval, tval, result);
+          break;
+        }
+        case kExprOffset32: {
+          auto scale = Pop(2, kWasmI32);
+          auto index = Pop(1, kWasmI32);
+          auto base = Pop(0, kWasmI32);
+          auto* result = Push(kWasmI32);
+          CALL_INTERFACE_IF_REACHABLE(Offset32, base, index, scale, result);
           break;
         }
         case kExprBr: {

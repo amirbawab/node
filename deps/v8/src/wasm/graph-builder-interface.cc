@@ -312,6 +312,12 @@ class WasmGraphBuildingInterface {
     ssa_env_->control = merge;
   }
 
+  void Offset32(FullDecoder* decoder, const Value& base, const Value& index, const Value& scale, 
+          Value* result) {
+    auto mulNode = BUILD(Binop, kExprI32Mul, index.node, scale.node, decoder->position());
+    result->node = BUILD(Binop, kExprI32Add, base.node, mulNode, decoder->position());
+  }
+
   void BrOrRet(FullDecoder* decoder, uint32_t depth) {
     if (depth == decoder->control_depth() - 1) {
       uint32_t ret_count = static_cast<uint32_t>(decoder->sig_->return_count());

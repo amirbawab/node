@@ -1259,6 +1259,69 @@ class LiftoffCompiler {
     __ AssertUnreachable(AbortReason::kUnexpectedReturnFromWasmTrap);
   }
 
+  void Offset32(FullDecoder* decoder, const Value& base, const Value& index, const Value& scale, 
+          Value* result) {
+    static constexpr RegClass result_rc = reg_class_for(kWasmI32);
+#if V8_TARGET_ARCH_X64
+    LiftoffAssembler::VarState scale_slot = __ cache_state()->stack_state.back();
+    ScaleFactor scale_f;
+    bool useScaleFactor = true;
+    if(scale_slot.loc() == kIntConst) {
+      int32_t immScale = scale_slot.i32_const();
+      switch(immScale) {
+        case 1:
+          scale_f= times_1;
+          break;
+        case 2:
+          scale_f = times_2;
+          break;
+        case 4:
+          scale_f = times_4;
+          break;
+        case 8:
+          scale_f = times_8;
+          break;
+        default:
+          useScaleFactor = false;
+          break;
+      }
+    }
+    if(useScaleFactor) {
+      __ cache_state()->stack_state.pop_back();
+      LiftoffRegister index_r = __ PopToRegister();
+      LiftoffAssembler::VarState base_slot = __ cache_state()->stack_state.back();
+      if(base_slot.loc() == kIntConst) {
+        __ cache_state()->stack_state.pop_back();
+        int32_t immBase = base_slot.i32_const();
+        LiftoffRegister dst = __ GetUnusedRegister(result_rc, {index_r});
+        __ emit_offset32(dst.gp(), immBase, index_r.gp(), scale_f);
+        __ PushRegister(kWasmI32, dst);
+      } else {
+        LiftoffRegister base_r = __ PopToRegister(LiftoffRegList::ForRegs(index_r));
+        LiftoffRegister dst = __ GetUnusedRegister(result_rc, {index_r, base_r});
+        __ emit_offset32(dst.gp(), base_r.gp(), index_r.gp(), scale_f);
+        __ PushRegister(kWasmI32, dst);
+      }
+    } else {
+      LiftoffRegister scale_r = __ PopToRegister();
+      LiftoffRegister index_r = __ PopToRegister(LiftoffRegList::ForRegs(scale_r));
+      LiftoffRegister dst = __ GetUnusedRegister(result_rc, {scale_r, index_r});
+      __ emit_i32_mul(dst.gp(), index_r.gp(), scale_r.gp());
+      LiftoffRegister base_r = __ PopToRegister(LiftoffRegList::ForRegs(dst));
+      __ emit_i32_add(dst.gp(), dst.gp(), base_r.gp());
+      __ PushRegister(kWasmI32, dst);
+    }
+#else
+    LiftoffRegister scale_r = __ PopToRegister();
+    LiftoffRegister index_r = __ PopToRegister(LiftoffRegList::ForRegs(scale_r));
+    LiftoffRegister dst = __ GetUnusedRegister(result_rc, {scale_r, index_r});
+    __ emit_i32_mul(dst.gp(), index_r.gp(), scale_r.gp());
+    LiftoffRegister base_r = __ PopToRegister(LiftoffRegList::ForRegs(dst));
+    __ emit_i32_add(dst.gp(), dst.gp(), base_r.gp());
+    __ PushRegister(kWasmI32, dst);
+#endif
+  }
+
   void Select(FullDecoder* decoder, const Value& cond, const Value& fval,
               const Value& tval, Value* result) {
     LiftoffRegList pinned;
