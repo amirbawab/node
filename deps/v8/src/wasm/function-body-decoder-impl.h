@@ -1677,6 +1677,7 @@ class WasmFullDecoder : public WasmDecoder<validate> {
     BuildSimpleOperator_##sig(opcode);  \
     break;
         FOREACH_SIMPLE_OPCODE(BUILD_SIMPLE_OPCODE)
+        FOREACH_MATH_OPCODE(BUILD_SIMPLE_OPCODE)
 #undef BUILD_SIMPLE_OPCODE
         case kExprNop:
           break;
