@@ -387,6 +387,10 @@ class LiftoffAssembler : public TurboAssembler {
   // 4 bytes on the stack holding half of a 64-bit value.
   inline void FillI64Half(Register, uint32_t index, RegPairHalf);
 
+  // Offset instruction
+  inline void emit_offset32(Register dst, Register base, Register index, ScaleFactor scale);
+  inline void emit_offset32(Register dst, int32_t base, Register index, ScaleFactor scale);
+
   // i32 binops.
   inline void emit_i32_add(Register dst, Register lhs, Register rhs);
   inline void emit_i32_sub(Register dst, Register lhs, Register rhs);
