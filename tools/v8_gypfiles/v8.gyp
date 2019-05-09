@@ -1740,6 +1740,8 @@
         '<(V8_ROOT)/src/wasm/wasm-opcodes.h',
         '<(V8_ROOT)/src/wasm/wasm-result.cc',
         '<(V8_ROOT)/src/wasm/wasm-result.h',
+        '<(V8_ROOT)/src/wasm/wasm-native-external-refs.cc',
+        '<(V8_ROOT)/src/wasm/wasm-native-external-refs.h',
         '<(V8_ROOT)/src/wasm/wasm-serialization.cc',
         '<(V8_ROOT)/src/wasm/wasm-serialization.h',
         '<(V8_ROOT)/src/wasm/wasm-text.cc',

@@ -27,6 +27,7 @@ constexpr size_t kV8MaxWasmGlobals = 1000000;
 constexpr size_t kV8MaxWasmExceptions = 1000000;
 constexpr size_t kV8MaxWasmExceptionTypes = 1000000;
 constexpr size_t kV8MaxWasmDataSegments = 100000;
+constexpr size_t kV8MaxWasmNatives = 1000000;
 // Don't use this limit directly, but use the value of {max_mem_pages()}.
 constexpr size_t kV8MaxWasmMemoryPages = 32767;  // = ~ 2 GiB
 constexpr size_t kV8MaxWasmStringSize = 100000;
