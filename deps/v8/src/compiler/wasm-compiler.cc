@@ -2816,6 +2816,67 @@ Node* WasmGraphBuilder::CallIndirect(uint32_t sig_index, Node** args,
                        untrusted_code_mitigations_ ? kRetpoline : kNoRetpoline);
 }
 
+Node* WasmGraphBuilder::CallNative(uint32_t index, Node** args, Node** rets,
+                                   wasm::WasmCodePosition position) {
+  // Call a native function with a signature determined by the
+  // wasm function signature. Stack will be composed of parameter values
+  // followed by return values
+
+  const wasm::WasmNative &native = env_->module->natives[index];
+  const wasm::FunctionSig* funcSig = native.sig;
+  DCHECK_GE(wasm::kV8MaxWasmFunctionMultiReturns, funcSig->return_count());
+  DCHECK_GE(wasm:: kV8MaxWasmFunctionParams, funcSig->parameter_count());
+
+  // Compute total stack slot size
+  int returnsStackSlotSize = 0;
+  for(int i=0; i < funcSig->return_count(); ++i) {
+    returnsStackSlotSize += wasm::ValueTypes::ElementSizeInBytes(funcSig->GetReturn(i));
+  }
+  int paramsStackSlotSize = 0;
+  for(int i=0; i < funcSig->parameter_count(); ++i) {
+    paramsStackSlotSize += wasm::ValueTypes::ElementSizeInBytes(funcSig->GetParam(i));
+  }
+
+  // Store parameters in stack
+  Node* stack_slot = graph()->NewNode(mcgraph()->machine()->StackSlot(returnsStackSlotSize + paramsStackSlotSize));
+  int paramStackSlotIndex = 0;
+  for(int i=0; i < funcSig->parameter_count(); ++i) {
+    auto type = funcSig->GetParam(i);
+    SetEffect(graph()->NewNode(
+        mcgraph()->machine()->Store(StoreRepresentation(wasm::ValueTypes::MachineRepresentationFor(type),
+                                                        kNoWriteBarrier)),
+        stack_slot, mcgraph()->Int32Constant(paramStackSlotIndex), args[i], Effect(), Control()));
+    paramStackSlotIndex += wasm::ValueTypes::ElementSizeInBytes(type);
+  }
+
+  Node* linearMemory = instance_cache_->mem_start;
+  Node* linearMemorySize = instance_cache_->mem_size;
+  Node* function = graph()->NewNode(mcgraph()->common()->ExternalConstant((*native.func)()));
+  MachineType sig_types[] = {
+//      MachineType::Int32(),   // wasm_native_call return type
+//      MachineType::Int32(),   // Native function id value
+      MachineType::Pointer(), // Linear memory address
+//      MachineType::Uint32(),  // Linear memory size
+      MachineType::Pointer()  // Stack slot address (parameter slots followed by return slots)
+  };
+  MachineSignature sig(0, 2, sig_types);
+  Node* call = BuildCCall(&sig, function, /*mcgraph()->Int32Constant(native.native_index),*/ linearMemory,
+      /*linearMemorySize,*/ stack_slot);
+  // Check if return value is zero (currently not used)
+  // ZeroCheck32(wasm::kTrapFuncInvalid, call, position);
+
+  int returnStackSlotIndex = paramsStackSlotSize;
+  for(int i=0; i < funcSig->return_count(); ++i) {
+    auto retType = funcSig->GetReturn(i);
+    rets[i] = SetEffect(graph()->NewNode(
+        mcgraph()->machine()->Load(wasm::ValueTypes::MachineTypeFor(retType)), stack_slot,
+        mcgraph()->Int32Constant(returnStackSlotIndex), Effect(), Control()));
+    returnStackSlotIndex += wasm::ValueTypes::ElementSizeInBytes(retType);
+  }
+
+  return call;
+}
+
 Node* WasmGraphBuilder::BuildI32Rol(Node* left, Node* right) {
   // Implement Rol by Ror since TurboFan does not have Rol opcode.
   // TODO(weiliang): support Word32Rol opcode in TurboFan.

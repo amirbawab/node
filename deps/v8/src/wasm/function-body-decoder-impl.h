@@ -316,6 +316,16 @@ struct CallIndirectImmediate {
 };
 
 template <Decoder::ValidateFlag validate>
+struct CallNativeFunctionImmediate {
+  uint32_t index;
+  const WasmNative* native = nullptr;
+  uint32_t length;
+  inline CallNativeFunctionImmediate(Decoder* decoder, const byte* pc) {
+    index = decoder->read_u32v<validate>(pc + 1, &length, "native function index");
+  }
+};
+
+template <Decoder::ValidateFlag validate>
 struct CallFunctionImmediate {
   uint32_t index;
   FunctionSig* sig = nullptr;
@@ -699,6 +709,8 @@ struct ControlBase {
   F(CallIndirect, const Value& index,                                         \
     const CallIndirectImmediate<validate>& imm, const Value args[],           \
     Value returns[])                                                          \
+  F(CallNative, const CallNativeFunctionImmediate<validate> &imm,             \
+    const Value args[], Value returns[])                                      \
   F(ReturnCall, const CallFunctionImmediate<validate>& imm,                   \
     const Value args[])                                                       \
   F(ReturnCallIndirect, const Value& index,                                   \
@@ -962,6 +974,15 @@ class WasmDecoder : public Decoder {
     return true;
   }
 
+  inline bool Complete(const byte* pc, CallNativeFunctionImmediate<validate>& imm) {
+    if (!VALIDATE(module_ != nullptr &&
+                  imm.index < module_->natives.size())) {
+      return false;
+    }
+    imm.native = &module_->natives[imm.index];
+    return true;
+  }
+
   inline bool Validate(const byte* pc, CallIndirectImmediate<validate>& imm) {
     if (!VALIDATE(module_ != nullptr && !module_->tables.empty())) {
       error("function table has to exist to execute call_indirect");
@@ -969,6 +990,14 @@ class WasmDecoder : public Decoder {
     }
     if (!Complete(pc, imm)) {
       errorf(pc + 1, "invalid signature index: #%u", imm.sig_index);
+      return false;
+    }
+    return true;
+  }
+
+  inline bool Validate(const byte* pc, CallNativeFunctionImmediate<validate>& imm) {
+    if (!Complete(pc, imm)) {
+      errorf(pc + 1, "invalid native index: #%u", imm.index);
       return false;
     }
     return true;
@@ -1192,6 +1221,10 @@ class WasmDecoder : public Decoder {
         CallIndirectImmediate<validate> imm(decoder, pc);
         return 1 + imm.length;
       }
+      case kExprCallNativeFunction: {
+        CallNativeFunctionImmediate<validate> imm(decoder, pc);
+        return 1 + imm.length;
+      }
 
       case kExprTry:
       case kExprIf:  // fall through
@@ -1394,6 +1427,11 @@ class WasmDecoder : public Decoder {
         // Indirect calls pop an additional argument for the table index.
         return {imm.sig->parameter_count() + 1,
                 imm.sig->return_count()};
+      }
+      case kExprCallNativeFunction: {
+        CallNativeFunctionImmediate<validate> imm(this, pc);
+        CHECK(Complete(pc, imm));
+        return {imm.native->sig->parameter_count(), imm.native->sig->return_count()};
       }
       case kExprThrow: {
         ExceptionIndexImmediate<validate> imm(this, pc);
@@ -2180,6 +2218,15 @@ class WasmFullDecoder : public WasmDecoder<validate> {
           auto* returns = PushReturns(imm.sig);
           CALL_INTERFACE_IF_REACHABLE(CallIndirect, index, imm, args_.data(),
                                       returns);
+          break;
+        }
+        case kExprCallNativeFunction: {
+          CallNativeFunctionImmediate<validate> imm(this, this->pc_);
+          len = 1 + imm.length;
+          if (!this->Validate(this->pc_, imm)) break;
+          PopArgs(imm.native->sig);
+          auto* returns = PushReturns(imm.native->sig);
+          CALL_INTERFACE_IF_REACHABLE(CallNative, imm, args_.data(), returns);
           break;
         }
         case kExprReturnCall: {
