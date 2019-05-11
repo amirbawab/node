@@ -265,6 +265,7 @@ bool IsJSCompatibleSignature(const FunctionSig* sig, bool hasBigIntFeature);
   V(F64Atan2, 0xcd, d_dd)              \
   V(F64Pow, 0xce, d_dd)                \
   V(F64Mod, 0xcf, d_dd)                \
+  V(F64Tanh, 0xe7, d_d)                \
 
 
 #define FOREACH_SIMD_MEM_OPCODE(V) \

@@ -8,6 +8,7 @@
 #include "src/wasm/value-type.h"
 #include "src/v8memory.h"
 #include "src/third_party/native/system.h"
+#include "src/third_party/native/math.h"
 
 namespace v8 {
 namespace internal {
@@ -24,7 +25,8 @@ bool find_native_function(const char* find_name, FunctionSig* sig, ExternalRefer
 // List of all the external references used 
 // by the native call instruction
 #define WASM_EXTERNAL_REFERENCE_LIST(F, V, P, R) \
-  WASM_EXTERNAL_REFERENCE_SYSTEM(F, V, P, R)
+  WASM_EXTERNAL_REFERENCE_SYSTEM(F, V, P, R) \
+  WASM_EXTERNAL_REFERENCE_MATH(F, V, P, R)
 
 #define WASM_EXTERNAL_REFERENCE_DECLARATION(F, func, name, params, rets) \
   void func(Address, Address);

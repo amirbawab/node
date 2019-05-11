@@ -790,6 +790,10 @@ Node* WasmGraphBuilder::Unop(wasm::WasmOpcode opcode, Node* input,
       op = m->Float64Tan();
       break;
     }
+    case wasm::kExprF64Tanh: {
+      op = m->Float64Tanh();
+      break;
+    }
     case wasm::kExprF64Exp: {
       op = m->Float64Exp();
       break;
