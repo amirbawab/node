@@ -7,6 +7,7 @@
 
 #include "src/globals.h"
 #include "src/runtime/runtime.h"
+#include "src/wasm/wasm-native-external-refs.h"
 
 namespace v8 {
 
@@ -82,6 +83,9 @@ class StatsCounter;
     "RegExpMacroAssembler*::CheckStackGuardState()")                           \
   V(re_grow_stack, "NativeRegExpMacroAssembler::GrowStack()")                  \
   V(re_word_character_map, "NativeRegExpMacroAssembler::word_character_map")
+
+#define WASM_EXTERNAL_REFERENCE_MASK(F, func, name, params, rets) \
+  F(wasm_##func, name)
 
 #define EXTERNAL_REFERENCE_LIST(V)                                            \
   V(abort_with_reason, "abort_with_reason")                                   \
@@ -193,6 +197,7 @@ class StatsCounter;
   V(wasm_word64_popcnt, "wasm::word64_popcnt")                                \
   V(wasm_memory_copy, "wasm::memory_copy")                                    \
   V(wasm_memory_fill, "wasm::memory_fill")                                    \
+  WASM_EXTERNAL_REFERENCE_LIST(V, WASM_EXTERNAL_REFERENCE_MASK, void, void)   \
   V(call_enqueue_microtask_function, "MicrotaskQueue::CallEnqueueMicrotask")  \
   V(call_enter_context_function, "call_enter_context_function")               \
   V(atomic_pair_load_function, "atomic_pair_load_function")                   \

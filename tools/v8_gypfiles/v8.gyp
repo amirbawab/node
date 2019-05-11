@@ -1619,6 +1619,8 @@
         '<(V8_ROOT)/src/strtod.h',
         '<(V8_ROOT)/src/task-utils.cc',
         '<(V8_ROOT)/src/task-utils.h',
+        '<(V8_ROOT)/src/third_party/native/system.cc',
+        '<(V8_ROOT)/src/third_party/native/system.h',
         '<(V8_ROOT)/src/third_party/siphash/halfsiphash.cc',
         '<(V8_ROOT)/src/third_party/siphash/halfsiphash.h',
         '<(V8_ROOT)/src/third_party/utf8-decoder/utf8-decoder.h',
