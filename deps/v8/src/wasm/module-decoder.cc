@@ -16,6 +16,7 @@
 #include "src/wasm/function-body-decoder-impl.h"
 #include "src/wasm/wasm-engine.h"
 #include "src/wasm/wasm-limits.h"
+#include "src/wasm/wasm-native-external-refs.h"
 
 namespace v8 {
 namespace internal {
@@ -84,6 +85,8 @@ const char* SectionName(SectionCode code) {
       return "Exception";
     case kDataCountSectionCode:
       return "DataCount";
+    case kNativeSectionCode:
+      return "Native";
     case kNameSectionCode:
       return kNameString;
     case kSourceMappingURLSectionCode:
@@ -456,6 +459,9 @@ class ModuleDecoderImpl : public Decoder {
           errorf(pc(), "unexpected section <%s>", SectionName(section_code));
         }
         break;
+      case kNativeSectionCode:
+        DecodeNativeSection();
+        break;
       default:
         errorf(pc(), "unexpected section <%s>", SectionName(section_code));
         return;
@@ -482,6 +488,24 @@ class ModuleDecoderImpl : public Decoder {
       module_->signature_ids.push_back(id);
     }
     module_->signature_map.Freeze();
+  }
+
+  void DecodeNativeSection() {
+    uint32_t natives_count = consume_count("natives count", kV8MaxWasmNatives);
+    module_->natives.reserve(natives_count);
+    for (uint32_t i = 0; ok() && i < natives_count; ++i) {
+      TRACE("DecodeNativeSignature[%d] module+%d\n", i, static_cast<int>(pc_ - start_));
+      WasmNative native;
+      native.func_name = consume_string(*this, true, "native function name");
+      native.sig = consume_sig(module_->signature_zone.get());
+      const char* func_name = std::string(
+          reinterpret_cast<const char*>(start()  + GetBufferRelativeOffset(native.func_name.offset())),
+          native.func_name.length()).c_str();
+      if(!find_native_function(func_name, native.sig, &native.func)) {
+        errorf(pc_, "native function %s not found", func_name);
+      }
+      module_->natives.push_back(std::move(native));
+    }
   }
 
   void DecodeImportSection() {

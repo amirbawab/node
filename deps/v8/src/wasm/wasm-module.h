@@ -145,6 +145,14 @@ struct WasmExport {
   uint32_t index;         // index into the respective space.
 };
 
+// Static representation of a wasm native.
+struct WasmNative {
+  WireBytesRef func_name;  // native function name.
+  FunctionSig* sig;        // native function signature.
+  int native_index;        // native function enum value.
+  ExternalReference (*func)();        // native function enum value.
+};
+
 enum ModuleOrigin : uint8_t { kWasmOrigin, kAsmJsOrigin };
 
 #define SELECT_WASM_COUNTER(counters, origin, prefix, suffix)     \
@@ -187,6 +195,7 @@ struct V8_EXPORT_PRIVATE WasmModule {
   std::vector<WasmExport> export_table;
   std::vector<WasmException> exceptions;
   std::vector<WasmElemSegment> elem_segments;
+  std::vector<WasmNative> natives;
   SignatureMap signature_map;  // canonicalizing map for signature indexes.
 
   ModuleOrigin origin = kWasmOrigin;  // origin of the module
