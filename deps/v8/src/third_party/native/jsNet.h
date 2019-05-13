@@ -1,0 +1,7 @@
+#ifndef V8_WASM_WASM_NATIVE_EXTERNAL_REFS_JSNET_H_
+#define V8_WASM_WASM_NATIVE_EXTERNAL_REFS_JSNET_H_
+
+#define WASM_EXTERNAL_REFERENCE_JSNET(F, V, P, R) \
+  V(F, jsNet_sigmoid, "jsNet_sigmoid", P(kWasmF64, kWasmI32, kWasmI32), R(kWasmF64))
+
+#endif // V8_WASM_WASM_NATIVE_EXTERNAL_REFS_JSNET_H_
