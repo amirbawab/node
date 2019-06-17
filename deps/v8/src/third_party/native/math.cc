@@ -2,7 +2,7 @@
 #include "src/v8memory.h"
 #include "src/globals.h"
 #include "src/base/ieee754.h"
-#include "../../../../../../eigen-git-mirror/Eigen/Dense"
+#include "../eigen-git-mirror/Eigen/Dense"
 
 namespace v8 {
 namespace internal {
