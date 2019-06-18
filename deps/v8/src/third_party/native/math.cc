@@ -53,9 +53,15 @@ void dot_product_rt_f32(Address mem, Address data) {
   float* dst_p = reinterpret_cast<float*>(mem_byte_p + dst_addr);
 
   // Perform dot product
-  auto lhs = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(lhs_p, lhs_row, lhs_col);
-  auto rhs = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>>(rhs_p, lhs_col, rhs_col);
-  Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(dst_p, lhs_row, rhs_col) = lhs * rhs;
+  if(lhs_col == 1) {
+    auto lhs = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>>(lhs_p, lhs_row, lhs_col);
+    auto rhs = Eigen::Map<Eigen::Matrix<float, 1, Eigen::Dynamic>>(rhs_p, lhs_col, rhs_col);
+    Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(dst_p, lhs_row, rhs_col) = lhs * rhs;
+  } else {
+    auto lhs = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(lhs_p, lhs_row, lhs_col);
+    auto rhs = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>>(rhs_p, lhs_col, rhs_col);
+    Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(dst_p, lhs_row, rhs_col) = lhs * rhs;
+  }
 }
 
 void dot_product_lt_f32(Address mem, Address data) {
