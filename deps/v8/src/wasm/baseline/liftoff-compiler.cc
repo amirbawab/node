@@ -1259,6 +1259,40 @@ class LiftoffCompiler {
     __ AssertUnreachable(AbortReason::kUnexpectedReturnFromWasmTrap);
   }
 
+	void Swap(FullDecoder* decoder, Value& first, Value& second) {
+    auto lastIndex = __ cache_state()->stack_state.size() - 1;
+    auto tmp = __ cache_state()->stack_state[lastIndex];
+    __ cache_state()->stack_state[lastIndex] = __ cache_state()->stack_state[lastIndex - 1];
+    __ cache_state()->stack_state[lastIndex - 1] = tmp;
+  }
+
+  void Duplicate(FullDecoder* decoder, Value* top, Value* result) {
+    /**
+     * This is a modified version of the GetLocal(...) function.
+     * The only change is instead of passing an index for the
+     * local to get, always get the top of the stack.
+     */
+
+    auto index = __ cache_state()->stack_state.size() - 1;
+    auto& slot = __ cache_state()->stack_state.back();
+    auto type = slot.type();
+    switch (slot.loc()) {
+      case kRegister:
+        __ PushRegister(slot.type(), slot.reg());
+        break;
+      case kIntConst:
+        __ cache_state()->stack_state.emplace_back(type, slot.i32_const());
+        break;
+      case kStack: {
+        auto rc = reg_class_for(type);
+        LiftoffRegister reg = __ GetUnusedRegister(rc);
+        __ Fill(reg, index, type);
+        __ PushRegister(slot.type(), reg);
+        break;
+      }
+    }
+  }
+
   void Offset32(FullDecoder* decoder, const Value& base, const Value& index, const Value& scale, 
           Value* result) {
     static constexpr RegClass result_rc = reg_class_for(kWasmI32);

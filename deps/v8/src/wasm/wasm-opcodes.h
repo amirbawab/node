@@ -45,7 +45,9 @@ bool IsJSCompatibleSignature(const FunctionSig* sig, bool hasBigIntFeature);
   V(ReturnCallIndirect, 0x13, _) \
   V(Drop, 0x1a, _)               \
   V(Select, 0x1b, _)             \
-  V(Offset32, 0x1c, _)             \
+  V(Duplicate, 0xf0, _)          \
+  V(Swap, 0xf1, _)               \
+  V(Offset32, 0x1c, _)           \
   V(CallNativeFunction, 0x1d, _) \
   V(GetLocal, 0x20, _)           \
   V(SetLocal, 0x21, _)           \

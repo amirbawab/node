@@ -692,8 +692,10 @@ struct ControlBase {
   F(Unreachable)                                                              \
   F(Select, const Value& cond, const Value& fval, const Value& tval,          \
     Value* result)                                                            \
+  F(Swap, Value& first, Value& second)                                        \
+  F(Duplicate, const Value* top, Value* result)                               \
   F(Offset32, const Value& base, const Value& index, const Value& scale,      \
-  Value* result)                                                              \
+    Value* result)                                                            \
   F(Br, Control* target)                                                      \
   F(BrIf, const Value& cond, uint32_t depth)                                  \
   F(BrTable, const BranchTableImmediate<validate>& imm, const Value& key)     \
@@ -1391,6 +1393,8 @@ class WasmDecoder : public Decoder {
       case kExprOffset32:
       case kExprSelect:
         return {3, 1};
+      case kExprSwap:
+        return {2, 2};
       case kExprSetTable:
       FOREACH_STORE_MEM_OPCODE(DECLARE_OPCODE_CASE)
         return {2, 0};
@@ -1415,6 +1419,7 @@ class WasmDecoder : public Decoder {
       case kExprF64Const:
       case kExprRefNull:
       case kExprMemorySize:
+      case kExprDuplicate:
         return {0, 1};
       case kExprCallFunction: {
         CallFunctionImmediate<validate> imm(this, pc);
@@ -1903,6 +1908,29 @@ class WasmFullDecoder : public WasmDecoder<validate> {
           CALL_INTERFACE_IF_REACHABLE(Select, cond, fval, tval, result);
           break;
         }
+				case kExprDuplicate: {
+					Value* peek = stack_value(0);
+					Value* value = Push(peek->type);
+					CALL_INTERFACE_IF_REACHABLE(Duplicate, peek, value);
+					break;
+				}
+				case kExprSwap: {
+					size_t size = stack_.size();
+					DCHECK_GT(size, 1);
+          auto &first = stack_[size - 1];
+          auto &second = stack_[size - 2];
+
+          auto pc_swap = first.pc;
+          first.pc = second.pc;
+          second.pc = pc_swap;
+
+          auto type_swap = first.type;
+          first.type = second.type;
+          second.type = type_swap;
+
+					CALL_INTERFACE_IF_REACHABLE(Swap, first, second);
+					break;
+				}
         case kExprOffset32: {
           auto scale = Pop(2, kWasmI32);
           auto index = Pop(1, kWasmI32);

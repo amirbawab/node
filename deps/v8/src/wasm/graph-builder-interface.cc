@@ -312,6 +312,22 @@ class WasmGraphBuildingInterface {
     ssa_env_->control = merge;
   }
 
+  void Swap(FullDecoder* decoder, Value& first, Value& second) {
+    // Swap implementation has been copied from an earlier version
+    // of node-experimental, those changes seem to segfault with
+    // the upgrade of V8
+
+    // auto node_swap = first.node;
+    // first.node = second.node;
+    // second.node = node_swap;
+    printf("Please disable Turbofan when using (swap) -- "
+           "Segfaults after upgrading to a new version of Node/V8.\n");
+  }
+
+  void Duplicate(FullDecoder* decoder, Value* top, Value* result) {
+    result->node = top->node;
+  }
+
   void Offset32(FullDecoder* decoder, const Value& base, const Value& index, const Value& scale, 
           Value* result) {
     auto mulNode = BUILD(Binop, kExprI32Mul, index.node, scale.node, decoder->position());
