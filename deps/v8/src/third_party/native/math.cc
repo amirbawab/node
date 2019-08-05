@@ -8,6 +8,31 @@ namespace v8 {
 namespace internal {
 namespace wasm {
 
+void mat_mul_f32(Address mem, Address data) {
+  int32_t* data_i32 = reinterpret_cast<int32_t*>(data);
+  auto o1 = *data_i32;
+  auto o2 = *(data_i32+1);
+  auto o3 = *(data_i32+2);
+  auto side = *(data_i32+3);
+  float* data_f32 = reinterpret_cast<float*>(mem);
+
+  float* mat1 = data_f32 + o1;
+  float* mat2 = data_f32 + o2;
+  float* mat3 = data_f32 + o3;
+
+  for(int r=0; r < side; ++r) {
+    for(int c=0; c < side; ++c) {
+      float resCell = 0;
+      for(int cr=0; cr < side; ++cr) {
+        resCell +=  *(mat1 + r * side + cr) +
+                    *(mat2 + cr * side + c);
+      }
+      *(mat3++) = resCell;
+    }
+  }
+}
+
+
 void sigmoid(Address mem, Address data) {
   const double* res = reinterpret_cast<double*>(data) + 1;
   WriteUnalignedValue<double>(reinterpret_cast<Address>(res), 

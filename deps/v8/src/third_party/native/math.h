@@ -3,6 +3,7 @@
 
 #define WASM_EXTERNAL_REFERENCE_MATH(F, V, P, R) \
   V(F, sigmoid, "sigmoid_f64", P(kWasmF64), R(kWasmF64)) \
+  V(F, mat_mul_f32, "mat_mul_f32", P(kWasmI32, kWasmI32, kWasmI32, kWasmI32), R()) \
   V(F, dot_product_f32, "dot_product_f32", P(kWasmI32, kWasmI32, kWasmI32,kWasmI32, kWasmI32, kWasmI32), R()) \
   V(F, dot_product_rt_f32, "dot_product_rt_f32", P(kWasmI32, kWasmI32, kWasmI32,kWasmI32, kWasmI32, kWasmI32), R()) \
   V(F, dot_product_lt_f32, "dot_product_lt_f32", P(kWasmI32, kWasmI32, kWasmI32,kWasmI32, kWasmI32, kWasmI32), R())
